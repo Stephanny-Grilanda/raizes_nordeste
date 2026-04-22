@@ -1,4 +1,4 @@
-<h1>Primeiros Passos<h1>
+<h1>Primeiros Passos</h1>
 
 Antes de iniciar o desenvolvimento, foi necessário criar o ambiente virtual e instalar os pacotes necessários.
 
