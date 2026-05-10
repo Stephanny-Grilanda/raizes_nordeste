@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Integer, Enum
 from sqlalchemy.orm import relationship
-from .config_db import Base
+from infra.config_db import Base
 from .enums import TipoUsuario
 
 class Usuario(Base):

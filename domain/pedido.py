@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, Float, Boolean, ForeignKey, Enum
-from .config_db import Base
+from infra.config_db import Base
 from .enums import CanalPedido, StatusPedido
 from sqlalchemy.orm import relationship
 

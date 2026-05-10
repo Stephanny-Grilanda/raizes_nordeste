@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, ForeignKey
-from .config_db import Base
+from infra.config_db import Base
 from sqlalchemy.orm import relationship
 
 class Estoque(Base):

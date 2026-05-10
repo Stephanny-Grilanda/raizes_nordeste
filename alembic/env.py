@@ -10,7 +10,7 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'domain')))
 
-from domain.config_db import Base
+from infra.config_db import Base
 from domain import __init__
 
 # this is the Alembic Config object, which provides
