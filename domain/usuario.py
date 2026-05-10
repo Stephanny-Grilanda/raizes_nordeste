@@ -11,18 +11,18 @@ class Usuario(Base):
     email = Column("email", String)
     senha = Column("senha", String)
     tipo_usuario = Column(Enum(TipoUsuario), nullable=False)
-    rua = Column("rua", String)
-    numero = Column("numero", String)
-    complemento = Column("complemento", String)
-    bairro = Column("bairro", String)
-    cidade = Column("cidade", String)
-    estado = Column("estado", String)
-    cep = Column("cep", String)
+    rua = Column("rua", String, nullable=True)
+    numero = Column("numero", String, nullable=True)
+    complemento = Column("complemento", String, nullable=True)
+    bairro = Column("bairro", String, nullable=True)
+    cidade = Column("cidade", String, nullable=True)
+    estado = Column("estado", String, nullable=True)
+    cep = Column("cep", String, nullable=True)
 
     pedidos = relationship("Pedido", back_populates="usuario")
 
 
-    def __init__(self, nome, email, senha, tipo_usuario, rua, numero, complemento, bairro, cidade, estado, cep):
+    def __init__(self, nome, email, senha, tipo_usuario, rua=None, numero=None, complemento=None, bairro=None, cidade=None, estado=None, cep=None):
         self.nome = nome
         self.email = email
         self.senha = senha
