@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer
-from .config_db import Base
+from infra.config_db import Base
 from sqlalchemy.orm import relationship
 
 class Unidade(Base):
