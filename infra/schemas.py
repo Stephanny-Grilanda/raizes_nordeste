@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional
-from domain.enums import TipoFuncionario
+from typing import Optional, List
+from domain.enums import TipoFuncionario, CanalPedido, StatusPedido
 
 class ClienteSchema(BaseModel):
     nome: str
@@ -27,3 +27,38 @@ class FuncionarioSchema(BaseModel):
     class Config:
         from_attributes = True
 
+class ItemPedidoSchema(BaseModel):
+    id_produto: int
+    quantidade: int
+
+    class Config:
+        from_attributes = True
+
+class PedidoSchema(BaseModel):
+    id_cliente: int
+    id_unidade: int
+    id_funcionario: Optional[int] = None
+    canal_pedido: CanalPedido
+    itens: List[ItemPedidoSchema]
+
+    class Config:
+        from_attributes = True
+
+class PedidoResponseSchema(BaseModel):
+    id: int
+    id_cliente: int
+    id_unidade: int
+    id_funcionario: Optional[int]
+    canal_pedido: CanalPedido
+    status: StatusPedido
+    valor_total: float
+
+    class Config:
+        from_attributes = True
+
+class LoginSchema(BaseModel):
+    email: str
+    senha: str
+    
+    class Config:
+        from_atributes = True
