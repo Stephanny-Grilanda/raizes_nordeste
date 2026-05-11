@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 import os
 import domain
+from infra import security
 
 # importação rotas da api
 
@@ -11,7 +12,6 @@ from api.routes import auth_routes
 from api.routes import order_routes
 
 load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY")
 
 app = FastAPI()
 
