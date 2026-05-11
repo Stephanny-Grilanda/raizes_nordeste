@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from domain.usuario import Usuario
+from domain.cliente import Cliente
 from infra.config_db import database
 from sqlalchemy.orm import sessionmaker
 

@@ -13,12 +13,11 @@ class StatusPedido(str, enum.Enum):
     PRONTO = "PRONTO"
     CANCELADO = "CANCELADO"
 
-class TipoUsuario(str, enum.Enum):
+class TipoFuncionario(str, enum.Enum):
     ADMIN = "ADMIN"
     GERENTE = "GERENTE"
     ATENDENTE = "ATENDENTE"
     COZINHA = "COZINHA"
-    CLIENTE = "CLIENTE"
 
 class StatusPagamento(str, enum.Enum):
     PAGO = "PAGO"

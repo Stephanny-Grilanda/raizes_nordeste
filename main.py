@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
 import os
+import domain
 
 # importação rotas da api
 
