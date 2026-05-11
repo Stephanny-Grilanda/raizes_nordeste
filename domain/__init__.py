@@ -4,4 +4,5 @@ from .pagamento import Pagamento
 from .pedido import Pedido
 from .produto import Produto
 from .unidade import Unidade
-from .usuario import Usuario
+from .cliente import Cliente
+from .funcionario import Funcionario    

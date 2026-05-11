@@ -7,19 +7,25 @@ class Pedido(Base):
     __tablename__ = "pedidos"
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
-    id_usuario = Column("id_usuario", ForeignKey("usuarios.id"))
+    id_cliente = Column("id_cliente", ForeignKey("clientes.id"))
     id_unidade = Column("id_unidade", ForeignKey("unidades.id"))
+    id_funcionario = Column("id_funcionario", ForeignKey("funcionarios.id"), nullable=True)
     canal_pedido = Column(Enum(CanalPedido), nullable=False)
     status = Column(Enum(StatusPedido), nullable=False, default=StatusPedido.PENDENTE)
     valor_total = Column("valor_total", Float)
-    usuario = relationship("Usuario", back_populates="pedidos")
+
+
+    cliente = relationship("Cliente", back_populates="pedidos")
     unidade = relationship("Unidade", back_populates="pedidos")
+    funcionario = relationship("Funcionario", back_populates="pedidos")
+
     itens = relationship("ItemPedido", cascade="all, delete-orphan", back_populates="pedido")
     pagamento = relationship("Pagamento", uselist=False, back_populates="pedido")
-
-    def __init__(self, usuario, unidade, canal_pedido, valor_total, status=StatusPedido.PENDENTE):
-        self.id_usuario = usuario
+    
+    def __init__(self, cliente, unidade, funcionario, canal_pedido, valor_total, status=StatusPedido.PENDENTE):
+        self.id_cliente = cliente
         self.id_unidade = unidade
+        self.id_funcionario = funcionario
         self.canal_pedido = canal_pedido
         self.valor_total = valor_total
         self.status = status

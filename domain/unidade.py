@@ -15,6 +15,7 @@ class Unidade(Base):
 
     pedidos = relationship("Pedido", back_populates="unidade")
     estoques = relationship("Estoque", back_populates="unidade")
+    funcionarios = relationship("Funcionario", back_populates="unidade")
 
     def __init__(self, rua, numero, bairro, cidade, estado, cep):
         self.rua = rua
