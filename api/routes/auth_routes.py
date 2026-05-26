@@ -3,11 +3,11 @@ from domain.cliente import Cliente
 from domain.funcionario import Funcionario
 from infra.dependencies import criar_sessao, verificar_token_cliente, verificar_token_funcionario
 from infra.security import bcrypt_context,SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-from infra.schemas import ClienteSchema, FuncionarioSchema, LoginSchema
+from domain.schemas import ClienteSchema, FuncionarioSchema, LoginSchema
 from sqlalchemy.orm import Session
-from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordRequestForm
+from infra.security import criar_token
 
 auth_router = APIRouter(prefix="/autenticacao", tags=["autenticacao"])
 
@@ -45,10 +45,12 @@ async def criar_cliente(cliente_schema: ClienteSchema, session: Session = Depend
         return {"mensagem": "Cliente cadastrado com sucesso!"}
     
 @auth_router.post("/criar_funcionario")
-async def criar_funcionario(funcionario_schema: FuncionarioSchema, session: Session = Depends(criar_sessao)):
+async def criar_funcionario(funcionario_schema: FuncionarioSchema, session: Session = Depends(criar_sessao), funcionario_logado: Funcionario = Depends(verificar_token_funcionario)):
     """
     Endpoint para criar um novo funcionário
     """
+    if funcionario_logado.tipo_funcionario not in [funcionario_schema.tipo_funcionario.ADMIN, funcionario_schema.tipo_funcionario.GERENTE]:
+        raise excecao(status_code=403, detail="Você não tem permissão para cadastrar funcionários.")
     funcionario = session.query(Funcionario).filter(Funcionario.email==funcionario_schema.email).first()
     if funcionario:
         raise excecao(status_code=422, detail="Este email já está cadastrado. Verifique e tente novamente")
@@ -65,11 +67,7 @@ async def criar_funcionario(funcionario_schema: FuncionarioSchema, session: Sess
         session.commit()
         return {"mensagem": "Funcionário cadastrado com sucesso!"}
 
-def criar_token(id_usuario, duracao_token=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES), funcionario:bool=False):
-    data_expiracao = datetime.now(timezone.utc) + duracao_token
-    dic_info = {"sub": str(id_usuario), "exp": data_expiracao, "role": "funcionario" if funcionario else "cliente"}
-    jwt_codificado = jwt.encode(dic_info, SECRET_KEY, ALGORITHM)
-    return jwt_codificado
+
 
 def autenticar_cliente(email, senha, session):
     cliente = session.query(Cliente).filter(Cliente.email==email).first()

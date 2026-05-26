@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException
-from infra.security import SECRET_KEY, ALGORITHM, oauth2_schema
+from infra.security import SECRET_KEY, ALGORITHM, oauth2_schema_cliente, oauth2_schema_funcionario
 from infra import config_db
 from sqlalchemy.orm import sessionmaker, Session
 from domain import Cliente, Funcionario
@@ -13,7 +13,7 @@ def criar_sessao():
     finally:
         session.close()
 
-def verificar_token_cliente(token: str = Depends(oauth2_schema), session: Session = Depends(criar_sessao)):
+def verificar_token_cliente(token: str = Depends(oauth2_schema_cliente), session: Session = Depends(criar_sessao)):
     try:
         dic_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
         id_cliente= int(dic_info.get("sub"))
@@ -25,7 +25,7 @@ def verificar_token_cliente(token: str = Depends(oauth2_schema), session: Sessio
     return cliente
 
 
-def verificar_token_funcionario(token: str = Depends(oauth2_schema), session: Session = Depends(criar_sessao)):
+def verificar_token_funcionario(token: str = Depends(oauth2_schema_funcionario), session: Session = Depends(criar_sessao)):
     try:
         dic_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
         id_funcionario = int(dic_info.get("sub"))
