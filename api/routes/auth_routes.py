@@ -1,13 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException as excecao
+from fastapi import APIRouter, Depends, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+
 from domain.cliente import Cliente
 from domain.funcionario import Funcionario
-from infra.dependencies import criar_sessao, verificar_token_cliente, verificar_token_funcionario
-from infra.security import bcrypt_context,SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from domain.schemas import ClienteSchema, FuncionarioSchema, LoginSchema
-from sqlalchemy.orm import Session
-from datetime import datetime, timedelta, timezone
-from fastapi.security import OAuth2PasswordRequestForm
-from infra.security import criar_token
+from infra.dependencies import criar_sessao, verificar_token_cliente, verificar_token_funcionario
+from api.services import auth_service
 
 auth_router = APIRouter(prefix="/autenticacao", tags=["autenticacao"])
 
@@ -18,139 +17,139 @@ async def autenticacao_padrao():
     """
     return {"mensagem": "Você está na rota de autenticação!", "autenticado": False}
 
-@auth_router.post("/criar_cliente")
-async def criar_cliente(cliente_schema: ClienteSchema, session: Session = Depends(criar_sessao)):
+
+@auth_router.post(
+    "/criar_cliente",
+    status_code=status.HTTP_201_CREATED,
+    summary="Cadastrar cliente",
+    responses={
+        201: {"description": "Cliente cadastrado com sucesso"},
+        422: {"description": "E-mail já cadastrado ou dados inválidos"},
+    },
+)
+async def criar_cliente(
+    cliente_schema: ClienteSchema,
+    session: Session = Depends(criar_sessao),
+):
+    """Endpoint para criar um novo cliente — delega ao service."""
+    return auth_service.criar_cliente(cliente_schema, session)
+
+
+@auth_router.post(
+    "/criar_funcionario",
+    status_code=status.HTTP_201_CREATED,
+    summary="Cadastrar funcionário",
+    responses={
+        201: {"description": "Funcionário cadastrado com sucesso"},
+        403: {"description": "Perfil sem permissão, apenas ADMIN e GERENTE podem criar funcionários"},
+        422: {"description": "E-mail já cadastrado ou dados inválidos"},
+    },
+)
+async def criar_funcionario(
+    funcionario_schema: FuncionarioSchema,
+    session: Session = Depends(criar_sessao),
+    funcionario_logado: Funcionario = Depends(verificar_token_funcionario),
+):
+    """Endpoint para criar um novo funcionário — delega ao service."""
+    return auth_service.criar_funcionario(funcionario_schema, funcionario_logado, session)
+
+
+@auth_router.post(
+    "/login-cliente",
+    summary="Login de cliente (JSON)",
+    responses={
+        200: {"description": "Login realizado com sucesso."},
+        422: {"description": "Credenciais inválidas"},
+    },
+)
+async def login_cliente(
+    login_schema: LoginSchema,
+    session: Session = Depends(criar_sessao),
+):
+    """Login de cliente via body JSON — delega ao service."""
+    return auth_service.login_cliente(login_schema, session)
+
+
+@auth_router.post(
+    "/login-funcionario",
+    summary="Login de funcionário (JSON)",
+    responses={
+        200: {"description": "Login realizado com sucesso."},
+        422: {"description": "Credenciais inválidas"},
+    },
+)
+async def login_funcionario(
+    login_schema: LoginSchema,
+    session: Session = Depends(criar_sessao),
+):
+    """Login de funcionário via body JSON — delega ao service."""
+    return auth_service.login_funcionario(login_schema, session)
+
+
+@auth_router.post(
+    "/login-form-cliente",
+    summary="Login de cliente (OAuth2 Form — Swagger Authorize)",
+    responses={
+        200: {"description": "Login realizado com sucesso."},
+        422: {"description": "Credenciais inválidas"},
+    },
+)
+async def login_form_cliente(
+    dados_formulario: OAuth2PasswordRequestForm = Depends(),
+    session: Session = Depends(criar_sessao),
+):
     """
-    Endpoint para criar um novo cliente
+    Login via formulário OAuth2 — usado pelo botão Authorize do Swagger.
+    Delega ao service.
     """
-    cliente = session.query(Cliente).filter(Cliente.email==cliente_schema.email).first()
-    if cliente:
-        raise excecao(status_code=422, detail="Este email já está cadastrado. Verifique e tente novamente")
-    else:
-        senha_criptografada = bcrypt_context.hash(cliente_schema.senha)
-        novo_cliente = Cliente(
-            nome=cliente_schema.nome, 
-            email=cliente_schema.email, 
-            senha=senha_criptografada,
-            rua=cliente_schema.rua,
-            numero=cliente_schema.numero,
-            complemento=cliente_schema.complemento,
-            bairro=cliente_schema.bairro,
-            cidade=cliente_schema.cidade,
-            estado=cliente_schema.estado,
-            cep=cliente_schema.cep
-        )
-        session.add(novo_cliente)
-        session.commit()
-        return {"mensagem": "Cliente cadastrado com sucesso!"}
-    
-@auth_router.post("/criar_funcionario")
-async def criar_funcionario(funcionario_schema: FuncionarioSchema, session: Session = Depends(criar_sessao), funcionario_logado: Funcionario = Depends(verificar_token_funcionario)):
-    """
-    Endpoint para criar um novo funcionário
-    """
-    if funcionario_logado.tipo_funcionario not in [funcionario_schema.tipo_funcionario.ADMIN, funcionario_schema.tipo_funcionario.GERENTE]:
-        raise excecao(status_code=403, detail="Você não tem permissão para cadastrar funcionários.")
-    funcionario = session.query(Funcionario).filter(Funcionario.email==funcionario_schema.email).first()
-    if funcionario:
-        raise excecao(status_code=422, detail="Este email já está cadastrado. Verifique e tente novamente")
-    else:
-        senha_criptografada = bcrypt_context.hash(funcionario_schema.senha)
-        novo_funcionario = Funcionario(
-            nome=funcionario_schema.nome, 
-            email=funcionario_schema.email, 
-            senha=senha_criptografada, 
-            tipo_funcionario=funcionario_schema.tipo_funcionario, 
-            id_unidade=funcionario_schema.id_unidade
-        )
-        session.add(novo_funcionario)
-        session.commit()
-        return {"mensagem": "Funcionário cadastrado com sucesso!"}
+    return auth_service.login_form_cliente(
+        dados_formulario.username,
+        dados_formulario.password,
+        session,
+    )
 
 
-
-def autenticar_cliente(email, senha, session):
-    cliente = session.query(Cliente).filter(Cliente.email==email).first()
-    if not cliente:
-        return False
-    elif not bcrypt_context.verify(senha, cliente.senha):
-        return False
-    return cliente
-
-@auth_router.post("/login-cliente")
-async def login(login_schema: LoginSchema, session: Session = Depends(criar_sessao)):
-    cliente = autenticar_cliente(login_schema.email, login_schema.senha, session)
-    if not cliente:
-        raise excecao(status_code=422, detail="Usuário não encontrado ou credenciais inválidas")
-    else:
-        access_token = criar_token(cliente.id)
-        refresh_token = criar_token(cliente.id, duracao_token=timedelta(days=7))
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "Bearer"
-            }
-    
-def autenticar_funcionario(email, senha, session):
-    funcionario = session.query(Funcionario).filter(Funcionario.email==email).first()
-    if not funcionario:
-        return False
-    elif not bcrypt_context.verify(senha, funcionario.senha):
-        return False
-    return funcionario
-
-@auth_router.post("/login-funcionario")
-async def login(login_schema: LoginSchema, session: Session = Depends(criar_sessao)):
-    funcionario = autenticar_funcionario(login_schema.email, login_schema.senha, session)
-    if not funcionario:
-        raise excecao(status_code=422, detail="Usuário não encontrado ou credenciais inválidas")
-    else:
-        access_token = criar_token(funcionario.id, funcionario=True)
-        refresh_token = criar_token(funcionario.id, duracao_token=timedelta(days=7), funcionario=True)
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "Bearer"
-            }
-    
-@auth_router.post("/login-form-cliente")
-async def login_form(dados_formulario: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(criar_sessao)):
-    usuario = autenticar_cliente(dados_formulario.username, dados_formulario.password, session)
-    if not usuario:
-        raise excecao(status_code=422, detail="Usuário não encontrado ou credenciais inválidas")
-    else:
-        access_token = criar_token(usuario.id)
-        return {
-            "access_token": access_token,
-            "token_type": "Bearer"
-            }
+@auth_router.get(
+    "/refresh-cliente",
+    summary="Renovar token de cliente",
+    responses={
+        200: {"description": "Novo access_token gerado"},
+        401: {"description": "Token inválido ou expirado"},
+    },
+)
+async def refresh_cliente(cliente: Cliente = Depends(verificar_token_cliente)):
+    """Renova access_token do cliente autenticado — delega ao service."""
+    return auth_service.refresh_token_cliente(cliente)
 
 
-@auth_router.get("/refresh-cliente")
-async def use_refresh_token(cliente: Cliente = Depends(verificar_token_cliente)):
-    access_token = criar_token(cliente.id)
-    return {
-        "access_token": access_token,
-        "token_type": "Bearer"
-        }
+@auth_router.post(
+    "/login-form-funcionario",
+    summary="Login de funcionário (OAuth2 Form — Swagger Authorize)",
+    responses={
+        200: {"description": "Login realizado — retorna access_token"},
+        422: {"description": "Credenciais inválidas"},
+    },
+)
+async def login_form_funcionario(
+    dados_formulario: OAuth2PasswordRequestForm = Depends(),
+    session: Session = Depends(criar_sessao),
+):
+    """Login de funcionário via formulário OAuth2 — delega ao service."""
+    return auth_service.login_form_funcionario(
+        dados_formulario.username,
+        dados_formulario.password,
+        session,
+    )
 
-@auth_router.post("/login-form-funcionario")
-async def login_form(dados_formulario: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(criar_sessao)):
-    usuario = autenticar_funcionario(dados_formulario.username, dados_formulario.password, session)
-    if not usuario:
-        raise excecao(status_code=422, detail="Usuário não encontrado ou credenciais inválidas")
-    else:
-        access_token = criar_token(usuario.id, funcionario=True)
-        return {
-            "access_token": access_token,
-            "token_type": "Bearer"
-            }
 
-
-@auth_router.get("/refresh-funcionario")
-async def use_refresh_token(funcionario: Funcionario = Depends(verificar_token_funcionario)):
-    access_token = criar_token(funcionario.id, funcionario=True)
-    return {
-        "access_token": access_token,
-        "token_type": "Bearer"
-        }
+@auth_router.get(
+    "/refresh-funcionario",
+    summary="Renovar token de funcionário",
+    responses={
+        200: {"description": "Novo access_token gerado"},
+        401: {"description": "Token inválido ou expirado"},
+    },
+)
+async def refresh_funcionario(funcionario: Funcionario = Depends(verificar_token_funcionario)):
+    """Renova access_token do funcionário autenticado — delega ao service."""
+    return auth_service.refresh_token_funcionario(funcionario)
