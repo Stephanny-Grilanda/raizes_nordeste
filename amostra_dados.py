@@ -40,6 +40,33 @@ def popular():
     
     session.flush() # Gerar IDs das unidades
 
+    # Criar 1 Admin global para testes (credenciais conhecidas para o validador)
+    senha_admin_plain = "admin123"
+    senha_admin = bcrypt_context.hash(senha_admin_plain)
+    # Atribui o admin à primeira unidade criada (garante id válido)
+    admin_unidade_id = unidades_db[0][0].id
+    session.add(
+        Funcionario(
+            "Administrador (ADMIN)",
+            "admin@raizes.test",
+            senha_admin,
+            TipoFuncionario.ADMIN,
+            admin_unidade_id,
+        )
+    )
+
+    # Também criar um Cliente com as mesmas credenciais para permitir que o ADMIN
+    # utilize endpoints que exigem autenticação de cliente (criar/pagar pedidos).
+    session.add(
+        Cliente(
+            nome="Administrador (CLIENTE-ADMIN)",
+            email="admin@raizes.test",
+            senha=senha_admin,
+            cidade=unidades_db[0][0].cidade,
+            estado=unidades_db[0][0].estado,
+        )
+    )
+
     # 2. Criar 20 Clientes (4 por região)
     senha_padrao = bcrypt_context.hash("senha123")
     for unidade_obj, reg_nome in unidades_db:

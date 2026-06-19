@@ -78,14 +78,18 @@ def processar_pagamento_mock(
             },
         )
 
-    # Evita duplicidade de pagamento para o mesmo pedido.
-    if pedido.pagamento is not None:
+    pedido_pago = (
+        session.query(Pagamento)
+        .filter(Pagamento.id_pedido == pedido.id, Pagamento.status == StatusPagamento.PAGO)
+        .first()
+    )
+    if pedido_pago is not None:
         raise HTTPException(
             status_code=409,
             detail={
                 "error": "PAGAMENTO_JA_REGISTRADO",
-                "message": f"O pedido {id_pedido} já possui um pagamento registrado.",
-                "details": [{"field": "id_pedido", "issue": "Pagamento duplicado não permitido"}],
+                "message": f"O pedido {id_pedido} já possui um pagamento aprovado (id_pagamento={pedido_pago.id}).",
+                "details": [{"field": "id_pedido", "issue": "Pagamento aprovado já registrado"}],
             },
         )
 

@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 
 from domain.cliente import Cliente
 from domain.funcionario import Funcionario
-from domain.schemas import ClienteSchema, FuncionarioSchema, LoginSchema
+from domain.schemas import ClienteSchema, FuncionarioSchema, LoginSchema, ClienteResponseSchema, FuncionarioResponseSchema
 from infra.dependencies import criar_sessao, verificar_token_cliente, verificar_token_funcionario
 from api.services import auth_service
+
 
 auth_router = APIRouter(prefix="/autenticacao", tags=["autenticacao"])
 
@@ -21,6 +22,8 @@ async def autenticacao_padrao():
 @auth_router.post(
     "/criar_cliente",
     status_code=status.HTTP_201_CREATED,
+    response_model=ClienteResponseSchema,
+    #response_model_exclude_none=True,
     summary="Cadastrar cliente",
     responses={
         201: {"description": "Cliente cadastrado com sucesso"},
@@ -38,6 +41,8 @@ async def criar_cliente(
 @auth_router.post(
     "/criar_funcionario",
     status_code=status.HTTP_201_CREATED,
+    response_model=FuncionarioResponseSchema,
+    #response_model_exclude_none=True,
     summary="Cadastrar funcionário",
     responses={
         201: {"description": "Funcionário cadastrado com sucesso"},
