@@ -1,12 +1,10 @@
-from fastapi import Depends, HTTPException
+from typing import Optional
+from fastapi import Depends, HTTPException, status
 from infra.security import SECRET_KEY, ALGORITHM, oauth2_schema_cliente, oauth2_schema_funcionario
 from infra import config_db
 from sqlalchemy.orm import sessionmaker, Session
 from domain import Cliente, Funcionario
 from jose import jwt, JWTError
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
-security_bearer = HTTPBearer()
 
 def criar_sessao():
     try:
@@ -98,27 +96,34 @@ def verificar_token_funcionario(token: str = Depends(oauth2_schema_funcionario),
     return funcionario
 
 def verificar_usuario_logado(
-    credentials: HTTPAuthorizationCredentials = Depends(security_bearer), 
+    token_cliente: Optional[str] = Depends(oauth2_schema_cliente),
+    token_func: Optional[str] = Depends(oauth2_schema_funcionario),
     session: Session = Depends(criar_sessao)
 ):
     """
-    Verifica o token independentemente de ser cliente ou funcionário.
-    Retorna um dicionário com a instância do usuário e o seu 'role'.
-    Essencial para rotas de multicanalidade onde Atendente ou Cliente podem agir.
+    Verifica se o usuário está logado como Cliente ou como Funcionário.
+    O Swagger exibirá os dois cadeados, bastando autenticar em um deles.
     """
-    token = credentials.credentials
+    token = token_cliente or token_func
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "TOKEN_AUSENTE",
+                "message": "Acesso negado. Faça o login como Cliente ou Funcionário no botão Authorize.",
+                "details": []
+            },
+        )
+
     try:
         dic_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
         id_usuario = int(dic_info.get("sub"))
         role = dic_info.get("role")
     except JWTError:
         raise HTTPException(
-            status_code=401,
-            detail={
-                "error": "TOKEN_INVALIDO",
-                "message": "Acesso negado. Verifique a validade do token.",
-                "details": [],
-            },
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail={"error": "TOKEN_INVALIDO", "message": "Token expirado ou inválido."}
         )
 
     if role == "cliente":
@@ -126,9 +131,9 @@ def verificar_usuario_logado(
     elif role == "funcionario":
         usuario = session.query(Funcionario).filter(Funcionario.id == id_usuario).first()
     else:
-        raise HTTPException(status_code=401, detail="Perfil desconhecido.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Perfil desconhecido no token.")
 
     if not usuario:
-        raise HTTPException(status_code=401, detail="Usuário não encontrado.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuário não encontrado.")
 
     return {"usuario": usuario, "role": role}
