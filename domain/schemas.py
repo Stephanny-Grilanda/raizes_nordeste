@@ -1,11 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
 from domain.enums import TipoFuncionario, CanalPedido, StatusPedido, StatusPagamento, MetodoPagamento
 
 
 class ClienteSchema(BaseModel):
     nome: str
-    email: str
+    email: EmailStr
     senha: str
     rua: Optional[str]
     numero: Optional[str]
@@ -20,7 +20,7 @@ class ClienteSchema(BaseModel):
 
 class FuncionarioSchema(BaseModel):
     nome: str
-    email: str
+    email: EmailStr
     senha: str
     tipo_funcionario: TipoFuncionario
     id_unidade: int
@@ -58,7 +58,7 @@ class PedidoResponseSchema(BaseModel):
         from_attributes = True
 
 class LoginSchema(BaseModel):
-    email: str
+    email: EmailStr
     senha: str
     
     class Config:
@@ -90,6 +90,22 @@ class PagamentoResponseSchema(BaseModel):
     status: StatusPagamento
     valor: float
     mensagem: str
+
+    class Config:
+        from_attributes = True
+
+class ClienteResponseSchema(BaseModel):
+    id: int
+    nome: str
+    email: Optional[EmailStr] = None
+
+    class Config:
+        from_attributes = True
+
+class FuncionarioResponseSchema(BaseModel):
+    id: int
+    nome: str
+    email: Optional[EmailStr] = None
 
     class Config:
         from_attributes = True

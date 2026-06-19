@@ -65,7 +65,7 @@ def criar_cliente(cliente_schema: ClienteSchema, session: Session) -> dict:
         novo_cliente.email,
     )
 
-    return {"mensagem": "Cliente cadastrado com sucesso!"}
+    return novo_cliente
 
 
 def criar_funcionario(
@@ -123,7 +123,7 @@ def criar_funcionario(
         funcionario_logado.id,
     )
 
-    return {"mensagem": "Funcionário cadastrado com sucesso!"}
+    return novo_funcionario
 
 
 def autenticar_cliente(email: str, senha: str, session: Session) -> Cliente | None:
