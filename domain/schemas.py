@@ -5,6 +5,7 @@ from domain.enums import TipoFuncionario, CanalPedido, StatusPedido, StatusPagam
 
 class ClienteSchema(BaseModel):
     nome: str
+    documento: int = Field(..., ge=10000000000, le=99999999999)
     email: EmailStr
     senha: str
     rua: Optional[str]
@@ -97,7 +98,6 @@ class PagamentoResponseSchema(BaseModel):
 class ClienteResponseSchema(BaseModel):
     id: int
     nome: str
-    email: Optional[EmailStr] = None
 
     class Config:
         from_attributes = True
@@ -105,7 +105,6 @@ class ClienteResponseSchema(BaseModel):
 class FuncionarioResponseSchema(BaseModel):
     id: int
     nome: str
-    email: Optional[EmailStr] = None
 
     class Config:
         from_attributes = True

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Enum
+from sqlalchemy import Column, String, Integer, Enum, BigInteger
 from sqlalchemy.orm import relationship
 from infra.config_db import Base
 
@@ -7,6 +7,7 @@ class Cliente(Base):
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
     nome = Column("nome", String)
+    documento = Column("documento", BigInteger, unique=True)
     email = Column("email", String)
     senha = Column("senha", String)
     rua = Column("rua", String, nullable=True)
@@ -20,8 +21,9 @@ class Cliente(Base):
     pedidos = relationship("Pedido", back_populates="cliente")
 
 
-    def __init__(self, nome, email, senha, rua=None, numero=None, complemento=None, bairro=None, cidade=None, estado=None, cep=None):
+    def __init__(self, nome, documento, email, senha, rua=None, numero=None, complemento=None, bairro=None, cidade=None, estado=None, cep=None):
         self.nome = nome
+        self.documento = documento
         self.email = email
         self.senha = senha
         self.rua = rua

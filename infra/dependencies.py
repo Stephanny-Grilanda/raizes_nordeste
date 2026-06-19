@@ -4,6 +4,9 @@ from infra import config_db
 from sqlalchemy.orm import sessionmaker, Session
 from domain import Cliente, Funcionario
 from jose import jwt, JWTError
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+security_bearer = HTTPBearer()
 
 def criar_sessao():
     try:
@@ -93,3 +96,39 @@ def verificar_token_funcionario(token: str = Depends(oauth2_schema_funcionario),
             },
         )
     return funcionario
+
+def verificar_usuario_logado(
+    credentials: HTTPAuthorizationCredentials = Depends(security_bearer), 
+    session: Session = Depends(criar_sessao)
+):
+    """
+    Verifica o token independentemente de ser cliente ou funcionário.
+    Retorna um dicionário com a instância do usuário e o seu 'role'.
+    Essencial para rotas de multicanalidade onde Atendente ou Cliente podem agir.
+    """
+    token = credentials.credentials
+    try:
+        dic_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
+        id_usuario = int(dic_info.get("sub"))
+        role = dic_info.get("role")
+    except JWTError:
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error": "TOKEN_INVALIDO",
+                "message": "Acesso negado. Verifique a validade do token.",
+                "details": [],
+            },
+        )
+
+    if role == "cliente":
+        usuario = session.query(Cliente).filter(Cliente.id == id_usuario).first()
+    elif role == "funcionario":
+        usuario = session.query(Funcionario).filter(Funcionario.id == id_usuario).first()
+    else:
+        raise HTTPException(status_code=401, detail="Perfil desconhecido.")
+
+    if not usuario:
+        raise HTTPException(status_code=401, detail="Usuário não encontrado.")
+
+    return {"usuario": usuario, "role": role}

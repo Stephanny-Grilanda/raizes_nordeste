@@ -60,6 +60,7 @@ def popular():
     session.add(
         Cliente(
             nome="Administrador (CLIENTE-ADMIN)",
+            documento=11111111111,
             email="admin@raizes.test",
             senha=senha_admin,
             cidade=unidades_db[0][0].cidade,
@@ -71,8 +72,10 @@ def popular():
     senha_padrao = bcrypt_context.hash("senha123")
     for unidade_obj, reg_nome in unidades_db:
         for i in range(1, 5):
+            doc_ficticio = random.randint(10000000000, 99999999999)
             c = Cliente(
                 nome=f"Cliente {i} do {reg_nome}",
+                documento=doc_ficticio,
                 email=f"cliente{i}.{reg_nome.lower()}@email.com",
                 senha=senha_padrao,
                 cidade=unidade_obj.cidade,
