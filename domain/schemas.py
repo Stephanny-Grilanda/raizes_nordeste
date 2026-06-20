@@ -5,6 +5,7 @@ from domain.enums import TipoFuncionario, CanalPedido, StatusPedido, StatusPagam
 
 class ClienteSchema(BaseModel):
     nome: str
+    documento: int = Field(..., ge=10000000000, le=99999999999, description="CPF do cliente (11 dígitos numéricos)")
     email: EmailStr
     senha: str
     rua: Optional[str]
@@ -36,9 +37,11 @@ class ItemPedidoSchema(BaseModel):
         from_attributes = True
 
 class PedidoSchema(BaseModel):
-    id_cliente: int
+    documento_cliente: Optional[int] = Field(
+        default=None, 
+        description="Obrigatório apenas no BALCAO. Clientes logados no APP/WEB/TOTEM não precisam enviar."
+    )
     id_unidade: int
-    id_funcionario: Optional[int] = None
     canal_pedido: CanalPedido
     itens: List[ItemPedidoSchema]
 
@@ -79,7 +82,6 @@ class PagamentoRequestSchema(BaseModel):
     class Config:
         from_attributes = True
 
-
 class PagamentoResponseSchema(BaseModel):
     """
     Simula a saída do processamento do mock de pagamento. 
@@ -97,7 +99,6 @@ class PagamentoResponseSchema(BaseModel):
 class ClienteResponseSchema(BaseModel):
     id: int
     nome: str
-    email: Optional[EmailStr] = None
 
     class Config:
         from_attributes = True
@@ -105,7 +106,12 @@ class ClienteResponseSchema(BaseModel):
 class FuncionarioResponseSchema(BaseModel):
     id: int
     nome: str
-    email: Optional[EmailStr] = None
+
+    class Config:
+        from_attributes = True
+
+class AtualizarStatusSchema(BaseModel):
+    status: StatusPedido
 
     class Config:
         from_attributes = True

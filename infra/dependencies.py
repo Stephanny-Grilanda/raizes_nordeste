@@ -1,4 +1,5 @@
-from fastapi import Depends, HTTPException
+from typing import Optional
+from fastapi import Depends, HTTPException, status
 from infra.security import SECRET_KEY, ALGORITHM, oauth2_schema_cliente, oauth2_schema_funcionario
 from infra import config_db
 from sqlalchemy.orm import sessionmaker, Session
@@ -93,3 +94,46 @@ def verificar_token_funcionario(token: str = Depends(oauth2_schema_funcionario),
             },
         )
     return funcionario
+
+def verificar_usuario_logado(
+    token_cliente: Optional[str] = Depends(oauth2_schema_cliente),
+    token_func: Optional[str] = Depends(oauth2_schema_funcionario),
+    session: Session = Depends(criar_sessao)
+):
+    """
+    Verifica se o usuário está logado como Cliente ou como Funcionário.
+    O Swagger exibirá os dois cadeados, bastando autenticar em um deles.
+    """
+    token = token_cliente or token_func
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "TOKEN_AUSENTE",
+                "message": "Acesso negado. Faça o login como Cliente ou Funcionário no botão Authorize.",
+                "details": []
+            },
+        )
+
+    try:
+        dic_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
+        id_usuario = int(dic_info.get("sub"))
+        role = dic_info.get("role")
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail={"error": "TOKEN_INVALIDO", "message": "Token expirado ou inválido."}
+        )
+
+    if role == "cliente":
+        usuario = session.query(Cliente).filter(Cliente.id == id_usuario).first()
+    elif role == "funcionario":
+        usuario = session.query(Funcionario).filter(Funcionario.id == id_usuario).first()
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Perfil desconhecido no token.")
+
+    if not usuario:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuário não encontrado.")
+
+    return {"usuario": usuario, "role": role}

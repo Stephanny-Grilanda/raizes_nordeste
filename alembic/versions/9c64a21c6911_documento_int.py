@@ -1,8 +1,8 @@
-"""migracao inicial
+"""documento_int
 
-Revision ID: d1dfce98a131
+Revision ID: 9c64a21c6911
 Revises: 
-Create Date: 2026-05-11 13:21:24.647096
+Create Date: 2026-06-18 23:32:48.061175
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'd1dfce98a131'
+revision: str = '9c64a21c6911'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,6 +24,7 @@ def upgrade() -> None:
     op.create_table('clientes',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('nome', sa.String(), nullable=True),
+    sa.Column('documento', sa.BigInteger(), nullable=True),
     sa.Column('email', sa.String(), nullable=True),
     sa.Column('senha', sa.String(), nullable=True),
     sa.Column('rua', sa.String(), nullable=True),
@@ -33,7 +34,8 @@ def upgrade() -> None:
     sa.Column('cidade', sa.String(), nullable=True),
     sa.Column('estado', sa.String(), nullable=True),
     sa.Column('cep', sa.String(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('documento')
     )
     op.create_table('produtos',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),

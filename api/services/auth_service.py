@@ -27,15 +27,18 @@ def criar_cliente(cliente_schema: ClienteSchema, session: Session) -> dict:
     """
     Caso de uso: cadastrar novo cliente com senha hasheada (LGPD — armazenamento seguro).
     """
-    cliente_existente = session.query(Cliente).filter(Cliente.email == cliente_schema.email).first()
+    cliente_existente = session.query(Cliente).filter(
+        (Cliente.email == cliente_schema.email) | 
+        (Cliente.documento == cliente_schema.documento)
+    ).first()
 
     if cliente_existente:
         raise HTTPException(
             status_code=422,
             detail={
-                "error": "EMAIL_JA_CADASTRADO",
-                "message": "Este email já está cadastrado. Verifique e tente novamente.",
-                "details": [{"field": "email", "issue": "E-mail já em uso"}],
+                "error": "DADOS_JA_CADASTRADOS",
+                "message": "E-mail ou documento já cadastrado. Verifique e tente novamente.",
+                "details": [{"field": "email/documento", "issue": "Já em uso"}],
             },
         )
 
@@ -43,6 +46,7 @@ def criar_cliente(cliente_schema: ClienteSchema, session: Session) -> dict:
 
     novo_cliente = Cliente(
         nome=cliente_schema.nome,
+        documento=cliente_schema.documento,
         email=cliente_schema.email,
         senha=senha_criptografada,
         rua=cliente_schema.rua,
