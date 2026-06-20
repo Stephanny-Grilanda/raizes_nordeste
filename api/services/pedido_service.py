@@ -71,10 +71,10 @@ def criar_pedido(
     # 5. VALIDAÇÃO DE ESTOQUE
     validar_estoque_disponivel(pedido_schema.id_unidade, pedido_schema.itens, session)
 
-    # 6. IDENTIFICAR O FUNCIONÁRIO (Se aplicável)
+    # identifica tipo funcionario
     id_func = usuario.id if role == "funcionario" else None
 
-    # 7. CRIAR O PEDIDO
+
     novo_pedido = Pedido(
         cliente=cliente_db.id,
         unidade=pedido_schema.id_unidade,
@@ -87,7 +87,7 @@ def criar_pedido(
     session.add(novo_pedido)
     session.flush()
 
-    # 8. ADICIONAR ITENS E CALCULAR TOTAL
+    # adiciona os itens do pedido e calcula o total
     for item_schema in pedido_schema.itens:
         produto = session.query(Produto).filter(Produto.id == item_schema.id_produto).first()
         novo_item = ItemPedido(
@@ -105,7 +105,7 @@ def criar_pedido(
     return novo_pedido
 
 
-def listar_pedidos(canal_pedido: CanalPedido, dados_usuario: dict, session: Session):
+async def listar_pedidos(canal_pedido: CanalPedido, dados_usuario: dict, session: Session):
     usuario = dados_usuario["usuario"]
     role = dados_usuario["role"]
 

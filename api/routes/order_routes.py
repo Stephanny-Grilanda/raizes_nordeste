@@ -5,17 +5,10 @@ from domain import cliente
 from domain.enums import CanalPedido
 from domain.schemas import PedidoSchema, PedidoResponseSchema
 from infra.dependencies import criar_sessao, verificar_usuario_logado
-from api.services.pedido_service import criar_pedido as criar_pedido_service, listar_pedidos
+from api.services.pedido_service import criar_pedido as criar_pedido_service, listar_pedidos as listar_pedidos_service
 
 
 order_router = APIRouter(prefix="/pedidos", tags=["pedidos"])
-
-@order_router.get("/")
-async def pedidos_padrao():
-    """
-    Endpoint padrão para pedidos no sistema
-    """
-    return {"mensagem": "Você está na rota de pedidos!"}
 
 @order_router.post(
     "/pedido",
@@ -58,4 +51,4 @@ async def listar_pedidos(
     dados_usuario: dict = Depends(verificar_usuario_logado),
 ):
     """Retorna os pedidos com base no perfil logado e filtro opcional de multicanalidade."""
-    return listar_pedidos(canal_pedido, dados_usuario, session)
+    return await listar_pedidos_service(canal_pedido, dados_usuario, session)
