@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from domain.cliente import Cliente
 from domain.pedido import Pedido
 from domain.pagamento import Pagamento
-from domain.enums import StatusPedido, StatusPagamento, MetodoPagamento
+from domain.enums import StatusPedido, StatusPagamento, MetodoPagamento, CanalPedido
 from api.services.estoque_service import baixar_estoque_pedido
 
 # Auditoria para rastreio de ações
@@ -25,7 +25,7 @@ def processar_pagamento_mock(
     id_pedido: int,
     metodo_pagamento: MetodoPagamento,
     simular_falha: bool,
-    cliente_logado: Cliente,
+    dados_usuario: dict,
     session: Session,
 ) -> dict:
     """
@@ -39,6 +39,10 @@ def processar_pagamento_mock(
     5. Se simular_falha=True  → altera status do pagamento para recusado e mantém pedido pendente, sem baixar estoque.
     6. Registra log de auditoria com ID do cliente (ação sensível)
     """
+    
+    usuario = dados_usuario["usuario"]
+    role = dados_usuario["role"]
+
     pedido = session.query(Pedido).filter(Pedido.id == id_pedido).first()
 
     if not pedido:
@@ -51,8 +55,7 @@ def processar_pagamento_mock(
             },
         )
 
-    # Cliente só pode pagar seus próprios pedidos
-    if pedido.id_cliente != cliente_logado.id:
+    if role == "cliente" and pedido.id_cliente != usuario.id:
         raise HTTPException(
             status_code=403,
             detail={
@@ -76,6 +79,16 @@ def processar_pagamento_mock(
                     }
                 ],
             },
+        )
+
+
+    if metodo_pagamento == MetodoPagamento.DINHEIRO and pedido.canal_pedido != CanalPedido.BALCAO:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "METODO_NAO_PERMITIDO", 
+                "message": f"Pagamentos em dinheiro não são permitidos no canal {pedido.canal_pedido.value}. Dirija-se ao balcão ou escolha outro método (Ex: PIX, CARTAO)."
+            }
         )
 
     pedido_pago = (
@@ -109,8 +122,8 @@ def processar_pagamento_mock(
         # Auditoria LGPD: registra ação sensível sem expor dados pessoais completos
         logger_auditoria.info(
             "Transação de pagamento processada e status do pedido atualizado | "
-            "acao=PAGAMENTO_RECUSADO | id_cliente=%s | id_pedido=%s | id_pagamento=%s",
-            cliente_logado.id,
+            "acao=PAGAMENTO_RECUSADO | id_usuario=%s | id_pedido=%s | id_pagamento=%s",
+            usuario.id,
             id_pedido,
             novo_pagamento.id,
         )
@@ -144,8 +157,8 @@ def processar_pagamento_mock(
     # log de ação sensível para auditoria (LGPD/Segurança)
     logger_auditoria.info(
         "Transação de pagamento processada e status do pedido atualizado | "
-        "acao=PAGAMENTO_APROVADO | id_cliente=%s | id_pedido=%s | id_pagamento=%s | novo_status=%s",
-        cliente_logado.id,
+        "acao=PAGAMENTO_APROVADO | id_usuario=%s | id_pedido=%s | id_pagamento=%s | novo_status=%s",
+        usuario.id,
         id_pedido,
         novo_pagamento.id,
         pedido.status.value,

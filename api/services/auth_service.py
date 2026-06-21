@@ -80,16 +80,16 @@ def criar_funcionario(
     """
     Caso de uso: cadastrar funcionário — apenas ADMIN ou GERENTE podem executar (autorização por role).
     """
-    # CORRIGIDO: comparação usa TipoFuncionario do domínio (antes usava enum do schema incorretamente)
-    if funcionario_logado.tipo_funcionario not in [TipoFuncionario.ADMIN, TipoFuncionario.GERENTE]:
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "error": "ACESSO_NEGADO",
-                "message": "Você não tem permissão para cadastrar funcionários.",
-                "details": [{"field": "tipo_funcionario", "issue": "Perfil sem permissão"}],
-            },
-        )
+    if funcionario_logado.tipo_funcionario == TipoFuncionario.GERENTE:
+        if funcionario_logado.id_unidade != funcionario_schema.id_unidade:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "ACESSO_NEGADO",
+                    "message": "Gerentes só podem cadastrar funcionários para a sua própria unidade.",
+                    "details": [{"field": "id_unidade", "issue": "Cadastro não liberado para esta unidade"}],
+                },
+            )
 
     funcionario_existente = (
         session.query(Funcionario).filter(Funcionario.email == funcionario_schema.email).first()

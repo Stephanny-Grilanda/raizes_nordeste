@@ -16,7 +16,11 @@ load_dotenv()
 
 app = FastAPI(
     title="API Raízes do Nordeste",
-    description="API para o projeto Raízes do Nordeste, uma rede de restaurantes com comidas típicas do Nordeste.",
+    description="""
+API para o projeto Raízes do Nordeste, uma rede de restaurantes com comidas típicas do Nordeste.
+
+A API possui rotas responsáveis por realizar o registro e autenticação de usuários, realizar e listar pedidos e processar pagamentos.
+    """,
     version="1.0.0",
 )
 
@@ -37,9 +41,9 @@ def _mapear_codigos_erro(status_code: int) -> str:
 async def tratar_excecao(request: Request, exc: HTTPException):
     """Garante que as mensagens de erro retorne um json padronizado."""
     if isinstance(exc.detail, dict):
-        codigo_erro = exc.detail.get("codigo_erro", _mapear_codigos_erro(exc.status_code))
-        mensagem = exc.detail.get("mensagem", "Ocorreu um erro durante a requisição.")
-        detalhes = exc.detail.get("detalhes", [])
+        codigo_erro = exc.detail.get("error", _mapear_codigos_erro(exc.status_code))
+        mensagem = exc.detail.get("message", "Ocorreu um erro durante a requisição.")
+        detalhes = exc.detail.get("details", [])
     else:
         codigo_erro = _mapear_codigos_erro(exc.status_code)
         mensagem = str(exc.detail) if exc.detail else "Ocorreu um erro durante a requisição."

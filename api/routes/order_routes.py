@@ -6,7 +6,9 @@ from domain.enums import CanalPedido
 from domain.schemas import PedidoSchema, PedidoResponseSchema
 from infra.dependencies import criar_sessao, verificar_usuario_logado
 from api.services.pedido_service import criar_pedido as criar_pedido_service, listar_pedidos as listar_pedidos_service
-
+from domain.schemas import AtualizarStatusSchema
+from domain.enums import StatusPedido
+from api.services.pedido_service import atualizar_status as atualizar_status_service
 
 order_router = APIRouter(prefix="/pedidos", tags=["pedidos"])
 
@@ -52,3 +54,18 @@ async def listar_pedidos(
 ):
     """Retorna os pedidos com base no perfil logado e filtro opcional de multicanalidade."""
     return await listar_pedidos_service(canal_pedido, dados_usuario, session)
+
+@order_router.patch(
+    "/{id_pedido}/status",
+    response_model=PedidoResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Atualizar status do pedido (Painel da Cozinha)",
+)
+async def atualizar_status_pedido(
+    id_pedido: int,
+    status_schema: AtualizarStatusSchema,
+    session: Session = Depends(criar_sessao),
+    dados_usuario: dict = Depends(verificar_usuario_logado),
+):
+    """Atualiza o status de um pedido. Acesso restrito à Cozinha, Gerência e Admin."""
+    return atualizar_status_service(id_pedido, status_schema.status, dados_usuario, session)
