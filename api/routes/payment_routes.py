@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from domain import cliente
 from domain.schemas import PagamentoRequestSchema, PagamentoResponseSchema
-from infra.dependencies import criar_sessao, verificar_token_cliente
+from infra.dependencies import criar_sessao, verificar_usuario_logado
 from api.services.pagamento_service import processar_pagamento_mock
 
 payment_router = APIRouter(prefix="/pagamentos", tags=["pagamentos"])
@@ -39,7 +39,7 @@ payment_router = APIRouter(prefix="/pagamentos", tags=["pagamentos"])
 async def pagamento_mock(
     pagamento_request: PagamentoRequestSchema,
     session: Session = Depends(criar_sessao),
-    cliente_logado: cliente.Cliente = Depends(verificar_token_cliente),
+    dados_usuario: dict = Depends(verificar_usuario_logado),
 ):
     """
     Endpoint de pagamento mock — simula o retorno de um gateway externo.
@@ -52,7 +52,7 @@ async def pagamento_mock(
         id_pedido=pagamento_request.id_pedido,
         metodo_pagamento=pagamento_request.metodo_pagamento,
         simular_falha=pagamento_request.simular_falha,
-        cliente_logado=cliente_logado,
+        dados_usuario=dados_usuario,
         session=session,
     )
     return resultado

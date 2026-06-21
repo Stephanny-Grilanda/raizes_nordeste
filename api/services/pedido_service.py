@@ -20,7 +20,6 @@ def criar_pedido(
     usuario = dados_usuario["usuario"]
     role = dados_usuario["role"]
 
-    # 1. VALIDAÇÃO DE MULTICANALIDADE
     if pedido_schema.canal_pedido == CanalPedido.BALCAO:
         if role != "funcionario" or usuario.tipo_funcionario not in [TipoFuncionario.ATENDENTE, TipoFuncionario.GERENTE, TipoFuncionario.ADMIN]:
             raise HTTPException(
@@ -34,7 +33,6 @@ def criar_pedido(
                 detail={"error": "ACESSO_NEGADO", "message": f"Funcionários não podem criar pedidos pelo canal {pedido_schema.canal_pedido.value}."}
             )
 
-    # 2. DEFINIR QUEM É O CLIENTE DO PEDIDO
     if role == "cliente":
         cliente_db = usuario
     else:
@@ -51,15 +49,23 @@ def criar_pedido(
                 detail={"error": "CLIENTE_NAO_ENCONTRADO", "message": "Cliente inexistente."}
             )
 
-    # 3. VALIDAÇÃO DA UNIDADE
     unidade = session.query(Unidade).filter(Unidade.id == pedido_schema.id_unidade).first()
     if not unidade:
         raise HTTPException(
             status_code=404,
             detail={"error": "UNIDADE_NAO_ENCONTRADA", "message": "Unidade não encontrada."}
         )
+    
+    if role == "funcionario" and usuario.tipo_funcionario != TipoFuncionario.ADMIN:
+        if usuario.id_unidade != pedido_schema.id_unidade:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "ACESSO_NEGADO", 
+                    "message": "Você só tem permissão para registrar pedidos na sua própria unidade de trabalho."
+                }
+            )
 
-    # 4. VALIDAÇÃO DE PRODUTOS
     for item_schema in pedido_schema.itens:
         produto = session.query(Produto).filter(Produto.id == item_schema.id_produto).first()
         if not produto:
@@ -68,7 +74,6 @@ def criar_pedido(
                 detail={"error": "PRODUTO_NAO_ENCONTRADO", "message": f"Produto com ID {item_schema.id_produto} não encontrado."}
             )
 
-    # 5. VALIDAÇÃO DE ESTOQUE
     validar_estoque_disponivel(pedido_schema.id_unidade, pedido_schema.itens, session)
 
     # identifica tipo funcionario
@@ -114,6 +119,10 @@ async def listar_pedidos(canal_pedido: CanalPedido, dados_usuario: dict, session
     if role == "cliente":
         query = query.filter(Pedido.id_cliente == usuario.id)
 
+    elif role == "funcionario":
+        if usuario.tipo_funcionario != TipoFuncionario.ADMIN:
+            query = query.filter(Pedido.id_unidade == usuario.id_unidade)
+
     if canal_pedido:
         query = query.filter(Pedido.canal_pedido == canal_pedido)
 
@@ -129,6 +138,16 @@ def atualizar_status(id_pedido: int, novo_status: StatusPedido, dados_usuario: d
             detail={"error": "ACESSO_NEGADO", "message": "Apenas profissionais da Cozinha, Gerentes ou Administradores podem alterar o status de preparo."}
         )
 
+    if usuario.tipo_funcionario == TipoFuncionario.COZINHA:
+        if novo_status not in [StatusPedido.PREPARACAO, StatusPedido.PRONTO]:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "STATUS_NAO_PERMITIDO", 
+                    "message": "Funcionarios da conzinha só podem alterar o status do pedido para PREPARACAO ou PRONTO.."
+                }
+            )
+
     pedido = session.query(Pedido).filter(Pedido.id == id_pedido).first()
     if not pedido:
         raise HTTPException(
@@ -136,6 +155,12 @@ def atualizar_status(id_pedido: int, novo_status: StatusPedido, dados_usuario: d
             detail={"error": "PEDIDO_NAO_ENCONTRADO", "message": f"Pedido com ID {id_pedido} não encontrado."}
         )
 
+    if usuario.tipo_funcionario != TipoFuncionario.ADMIN and pedido.id_unidade != usuario.id_unidade:
+        raise HTTPException(
+            status_code=403, 
+            detail={"error": "ACESSO_NEGADO", "message": "Você não pode alterar o status de um pedido de outra unidade."}
+        )
+    
     pedido.status = novo_status
     session.commit()
     session.refresh(pedido)
