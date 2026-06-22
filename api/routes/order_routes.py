@@ -18,8 +18,9 @@ order_router = APIRouter(prefix="/pedidos", tags=["pedidos"])
     status_code=status.HTTP_201_CREATED,
     summary="Criar pedido",
     description=(
-        "Cria um novo pedido com itens e valor total calculado, validando estoque da unidade. "
-        "Requer autenticação JWT de cliente. Status inicial: PENDENTE (aguardando pagamento mock)."
+        "Cria um novo pedido com itens e valor total calculado, validando estoque da unidade.\n\n "
+        "Requer autenticação JWT.\n\n"
+        "Clientes podem criar pedidos através dos canais APP, WEB e TOTEM.\n\n Funcionários podem criar pedidos apenas no canal BALCAO."
     ),
     responses={
         201: {

@@ -33,21 +33,23 @@ def criar_pedido(
                 detail={"error": "ACESSO_NEGADO", "message": f"Funcionários não podem criar pedidos pelo canal {pedido_schema.canal_pedido.value}."}
             )
 
+    cliente_id = None
+    
     if role == "cliente":
-        cliente_db = usuario
+        cliente_id = usuario.id
     else:
-        if not pedido_schema.documento_cliente:
-            raise HTTPException(
-                status_code=422, 
-                detail={"error": "DOCUMENTO_OBRIGATORIO", "message": "Para pedidos no balcão, o atendente deve informar o documento do cliente."}
-            )
-        
-        cliente_db = session.query(Cliente).filter(Cliente.documento == pedido_schema.documento_cliente).first()
-        if not cliente_db:
-            raise HTTPException(
-                status_code=404, 
-                detail={"error": "CLIENTE_NAO_ENCONTRADO", "message": "Cliente inexistente."}
-            )
+        # Se o perfil for de funcionário, o campo documento_cliente é opcional. Se for fornecido, deve ser validado. Se não for fornecido, o pedido será registrado como anônimo.
+        if pedido_schema.documento_cliente:
+            cliente_db = session.query(Cliente).filter(Cliente.documento == pedido_schema.documento_cliente).first()
+            if not cliente_db:
+                raise HTTPException(
+                    status_code=404, 
+                    detail={
+                        "error": "CLIENTE_NAO_ENCONTRADO", 
+                        "message": "Cliente não cadastrado. Para registrar um pedido sem cadastrá-lo, não envie o campo documento_cliente."
+                    }
+                )
+            cliente_id = cliente_db.id
 
     unidade = session.query(Unidade).filter(Unidade.id == pedido_schema.id_unidade).first()
     if not unidade:
@@ -81,7 +83,7 @@ def criar_pedido(
 
 
     novo_pedido = Pedido(
-        cliente=cliente_db.id,
+        cliente=cliente_id,
         unidade=pedido_schema.id_unidade,
         funcionario=id_func,
         canal_pedido=pedido_schema.canal_pedido,

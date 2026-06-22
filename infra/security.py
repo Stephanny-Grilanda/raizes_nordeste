@@ -7,8 +7,8 @@ from jose import jwt, JWTError
 load_dotenv()
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_schema_cliente = OAuth2PasswordBearer(tokenUrl="autenticacao/login-form-cliente", auto_error=False)
-oauth2_schema_funcionario = OAuth2PasswordBearer(tokenUrl="autenticacao/login-form-funcionario", auto_error=False)
+oauth2_schema_cliente = OAuth2PasswordBearer(tokenUrl="autenticacao/login-form-cliente", auto_error=False, scheme_name="JWT Cliente")
+oauth2_schema_funcionario = OAuth2PasswordBearer(tokenUrl="autenticacao/login-form-funcionario", auto_error=False, scheme_name="JWT Funcionario")
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")

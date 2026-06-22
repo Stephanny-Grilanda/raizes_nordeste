@@ -50,7 +50,7 @@ class PedidoSchema(BaseModel):
 
 class PedidoResponseSchema(BaseModel):
     id: int
-    id_cliente: int
+    id_cliente: Optional[int]
     id_unidade: int
     id_funcionario: Optional[int]
     canal_pedido: CanalPedido
@@ -112,6 +112,17 @@ class FuncionarioResponseSchema(BaseModel):
 
 class AtualizarStatusSchema(BaseModel):
     status: StatusPedido
+
+    class Config:
+        from_attributes = True
+
+class ProdutoEstoqueResponseSchema(BaseModel):
+    id_produto: int
+    nome: str
+    descricao: str
+    categoria: str
+    preco: float
+    quantidade_disponivel: int
 
     class Config:
         from_attributes = True
