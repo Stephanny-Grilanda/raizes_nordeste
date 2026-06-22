@@ -48,7 +48,7 @@ def popular():
     session.add(
         Funcionario(
             "Administrador (ADMIN)",
-            "admin@raizes.test",
+            "admin@raizes.com",
             senha_admin,
             TipoFuncionario.ADMIN,
             admin_unidade_id,
@@ -61,7 +61,7 @@ def popular():
         Cliente(
             nome="Administrador (CLIENTE-ADMIN)",
             documento=11111111111,
-            email="admin@raizes.test",
+            email="admin@raizes.com",
             senha=senha_admin,
             cidade=unidades_db[0][0].cidade,
             estado=unidades_db[0][0].estado,

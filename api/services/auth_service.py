@@ -78,19 +78,42 @@ def criar_funcionario(
     session: Session,
 ) -> dict:
     """
-    Caso de uso: cadastrar funcionário — apenas ADMIN ou GERENTE podem executar (autorização por role).
+    Caso de uso: cadastrar funcionário — apenas ADMIN ou GERENTE criar funcionários.
     """
+    if funcionario_logado.tipo_funcionario not in [TipoFuncionario.ADMIN, TipoFuncionario.GERENTE]:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "ACESSO_NEGADO",
+                "message": "Acesso negado. Apenas Administradores e Gerentes podem cadastrar novos funcionários no sistema.",
+                "details": [{"field": "tipo_funcionario", "issue": f"Seu perfil ({funcionario_logado.tipo_funcionario.value}) não tem permissão para esta ação."}],
+            },
+        )
+
     if funcionario_logado.tipo_funcionario == TipoFuncionario.GERENTE:
+        # Gerente só pode criar funcionários na sua própria unidade
         if funcionario_logado.id_unidade != funcionario_schema.id_unidade:
             raise HTTPException(
                 status_code=403,
                 detail={
                     "error": "ACESSO_NEGADO",
                     "message": "Gerentes só podem cadastrar funcionários para a sua própria unidade.",
-                    "details": [{"field": "id_unidade", "issue": "Cadastro não liberado para esta unidade"}],
+                    "details": [{"field": "id_unidade", "issue": "Cadastro não liberado para esta unidade."}],
+                },
+            )
+        
+        # Gerente não pode criar Admin nem outro Gerente
+        if funcionario_schema.tipo_funcionario in [TipoFuncionario.ADMIN, TipoFuncionario.GERENTE]:
+             raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "ACESSO_NEGADO",
+                    "message": "Gerentes só podem cadastrar funcionários dos perfis ATENDENTE e COZINHA.",
+                    "details": [{"field": "tipo_funcionario", "issue": f"Não é permitido criar usuário com perfil {funcionario_schema.tipo_funcionario.value}."}],
                 },
             )
 
+    # Verifica se o e-mail já existe
     funcionario_existente = (
         session.query(Funcionario).filter(Funcionario.email == funcionario_schema.email).first()
     )
