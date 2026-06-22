@@ -21,6 +21,8 @@ A documentação está dividida em três partes:
 2. [Configurações do banco de dados](#configuracao-do-banco-de-dados)
 3. [Utilização da API](#utilizacao-da-api)
 
+---
+
 <h2 id="configuracao-do-ambiente">Configuração do ambiente</h2>
 
 1. Criar uma pasta para armazenar o ambiente virtual e o repositório de códigos.
@@ -41,6 +43,8 @@ A documentação está dividida em três partes:
 
 Com essas configurações iniciais prontas você pode seguir para os próximos passos.
 
+---
+
 <h2 id="configuracao-do-banco-de-dados">Configuração do banco de dados</h2>
 
 1. Rode o comando `alembic revision --autogenerate -m "migracao inicial"` para criar a migração inicial do banco de dados.
@@ -50,6 +54,8 @@ Com essas configurações iniciais prontas você pode seguir para os próximos p
 3. Verifique a criação das tabelas utilizando o próprio vs code com a extensão SQLite Viewer ou utilizando o DB Browser for SQLite (precisa ser instalado através do site https://sqlitebrowser.org/).
 
 4. Rode o comando `python amostra_dados.py` para popular o banco de dados com dados de exemplo.
+
+---
 
 <h2 id="utilizacao-da-api">Utilização da API</h2>
 
@@ -62,6 +68,8 @@ Com essas configurações iniciais prontas você pode seguir para os próximos p
 4. Para acessar os endpoints protegidos, faça o login utilizando o botão Authorize no canto superior direito da documentação.
 
 5. Faça o login utilizando a credencial de um usuário que possui acesso ao endpoint que deseja testar. Você pode utilizar as credenciais do usuário admin criadas no arquivo `amostra_dados.py` ou criar um novo usuário utilizando o endpoint de cadastro.
+
+---
 
 <h3>Importante</h3>
 
