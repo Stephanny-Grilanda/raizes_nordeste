@@ -55,7 +55,11 @@ async def criar_funcionario(
     session: Session = Depends(criar_sessao),
     funcionario_logado: Funcionario = Depends(verificar_token_funcionario),
 ):
-    """Endpoint para criar um novo funcionário — delega ao service."""
+    """Rota bloqueada para clientes, atendentes e cozinha.
+    
+    Gerentes podem criar apenas funcionários dos tipos ATENDENTE e COZINHA, enquanto Admins podem criar funcionários de qualquer tipo.
+
+    Gerentes só podem criar funcionários de sua própria unidade."""
     return auth_service.criar_funcionario(funcionario_schema, funcionario_logado, session)
 
 

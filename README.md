@@ -73,4 +73,6 @@ Lembre-se que alguns endpoints possuem restrições de acesso, ou seja, apenas u
     <li><strong>Cozinha:</strong> Acesso a endpoints de listagem e atualização do status dos pedidos da unidade em que está alocado.</li>
     <li><strong>Gerente:</strong> Acesso a endpoints de gerenciamento e relatórios de desempenho da unidade em que está alocado.</li>
     <li><strong>Admin:</strong> Acesso total a todos os endpoints, incluindo gerenciamento de usuários e configurações do sistema.</li>
+    Login padrão para teste:
+    <strong>Admin:</strong> email: admin@raizes.com | senha: admin123</li>
 </ul>

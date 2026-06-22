@@ -15,9 +15,10 @@ payment_router = APIRouter(prefix="/pagamentos", tags=["pagamentos"])
     status_code=status.HTTP_200_OK,
     summary="Simular pagamento através de mock.",
     description=(
-        "Simula integração com gateway de pagamento externo através de mock."
-        "Aprova ou recusa a transação conforme o campo `simular_falha` e atualiza o status do pedido."
-        "Requer que o cliente esteja autenticado."
+        "Simula integração com gateway de pagamento externo através de mock.\n\n"
+        "Aprova ou recusa a transação conforme o campo `simular_falha` e atualiza o status do pedido.\n\n"
+        "Requer que o cliente esteja autenticado.\n\n"
+        "Métodos de pagamento disponíveis: CARTAO_CREDITO, PIX, DINHEIRO (somente para pagamento no balcão)."
     ),
     responses={
         200: {
