@@ -52,13 +52,11 @@ async def tratar_excecao(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code = exc.status_code,
         content = {
-            "error": {
-                "error": codigo_erro,
-                "message": mensagem,
-                "details": detalhes,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "path": str(request.url.path)
-            },
+            "error": codigo_erro,
+            "message": mensagem,
+            "details": detalhes,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "path": str(request.url.path)
         }
     )
 
