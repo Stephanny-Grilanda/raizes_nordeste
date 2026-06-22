@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from domain.estoque import Estoque
 from domain.pedido import Pedido
+from domain.produto import Produto
 
 logger_auditoria = logging.getLogger("auditoria.estoque")
 if not logger_auditoria.handlers:
@@ -123,3 +124,37 @@ def baixar_estoque_pedido(pedido: Pedido, session: Session) -> None:
             item.quantidade,
             estoque.quantidade,
         )
+
+def listar_produtos_por_unidade(id_unidade: int, session: Session) -> list[dict]:
+    """
+    Retorna o cardápio e a quantidade em estoque para uma unidade específica.
+    """
+    resultados = (
+        session.query(Produto, Estoque.quantidade)
+        .join(Estoque, Produto.id == Estoque.id_produto)
+        .filter(Estoque.id_unidade == id_unidade)
+        .all()
+    )
+    
+    lista_produtos = []
+    for produto, quantidade in resultados:
+        lista_produtos.append({
+            "id_produto": produto.id,
+            "nome": produto.nome,
+            "descricao": produto.descricao,
+            "categoria": produto.categoria,
+            "preco": produto.preco,
+            "quantidade_disponivel": quantidade
+        })
+        
+    if not lista_produtos:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": "CARDAPIO_NAO_ENCONTRADO",
+                "message": f"Nenhum produto em estoque encontrado para a unidade {id_unidade}.",
+                "details": []
+            }
+        )
+        
+    return lista_produtos

@@ -25,15 +25,13 @@ A documentação está dividida em três partes:
 
 <h2 id="configuracao-do-ambiente">Configuração do ambiente</h2>
 
-1. Criar uma pasta para armazenar o ambiente virtual e o repositório de códigos.
+1. Clonar o repositório do projeto utilizando o comando `git clone <link do repo>`
 
-2. Abrir a pasta criada utilizando o vs code.
+2. Navegar até a pasta do projeto utilizando o terminal do vs code.
 
-2. Criar a venv digitando o comando  `python -m venv venv` no terminal do vs code.
+3. Criar a venv digitando o comando  `python -m venv venv` no terminal do vs code.
 
-3. Ativar a venv com o comando `.\venv\Scripts\activate.bat`.
-
-4. Clonar o repositório do projeto utilizando o comando `git clone <link do repo>`
+4. Ativar a venv com o comando `.\venv\Scripts\activate.bat`.
 
 5. Entrar na pasta do repositório do projeto utilizando o comando `cd <nome-da-pasta>`.
 

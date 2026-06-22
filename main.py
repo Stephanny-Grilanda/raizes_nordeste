@@ -11,15 +11,16 @@ from datetime import datetime, timezone
 from api.routes import auth_routes
 from api.routes import order_routes
 from api.routes import payment_routes
+from api.routes import product_routes
 
 load_dotenv()
 
 app = FastAPI(
     title="API Raízes do Nordeste",
     description="""
-API para o projeto Raízes do Nordeste, uma rede de restaurantes com comidas típicas do Nordeste.
+    API para o projeto Raízes do Nordeste, uma rede de restaurantes com comidas típicas do Nordeste.
 
-A API possui rotas responsáveis por realizar o registro e autenticação de usuários, realizar e listar pedidos e processar pagamentos.
+    A API possui rotas responsáveis por realizar o registro e autenticação de usuários, realizar e listar pedidos e processar pagamentos.
     """,
     version="1.0.0",
 )
@@ -63,6 +64,7 @@ async def tratar_excecao(request: Request, exc: HTTPException):
 app.include_router(auth_routes.auth_router)
 app.include_router(order_routes.order_router)
 app.include_router(payment_routes.payment_router)
+app.include_router(product_routes.product_router)
 
 @app.get("/")
 def root():
